@@ -1,0 +1,271 @@
+---
+title: "Logistic Regression"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 1.1 Titanic Data
+
+
+### 1)
+```{r}
+library(tidyverse)
+titanic<-read.csv("./data/titanic.csv.bz2")
+head(titanic)
+
+
+#sanity check
+dim(titanic)
+cat("\n The total number of rows in data :",nrow(titanic))
+cat("\n The total number of rows in data :",ncol(titanic))
+cat("\n The number of missing values in data : ",sum(is.na(titanic)))
+
+```
+The dataset seems to have correct datatypes assigned to the columns.
+
+
+
+### 2)
+```{r}
+
+cat("\n NA values for each column")
+colSums(is.na(titanic))
+
+```
+
+
+
+### 3)
+In some columns like boat and cabin and home.dest some records have blank values for the columns but not NA hence these are implausible values.
+
+
+## 1.2) LOGISTIC REGRESSION
+
+
+### 1)
+Based on the data, I think the variables that are the most important ones to describe and affect survival are age, pclass, home.dest, port of embarkation,no of siblings/spouses aboard and number of parents/children aboard. 
+Higher age, lower passenger class, more no of siblings/spouses, number of parents/children aboard should be related to lower chances of survival.
+ 
+ 
+### 2)
+```{r}
+titanic$child <- ifelse(titanic$age <= 14, 1,0)
+head(titanic)
+
+```
+
+
+### 3)
+pclass represents passenger class. In the dataset there are 3 unique passenger classes 1,2,3 and a passenger can be in either one of them. Hence there are only 3 possible categories and factors are used to work with categorical variables that have a fixed and known set of possible values hence we need to convert pclass from int to factor
+```{r}
+unique(titanic$pclass)
+titanic$pclass=factor(titanic$pclass)
+
+```
+
+
+### 4)
+```{r}
+model<-glm(survived ~ sex+pclass+child,data=titanic,family=binomial())
+summary(model)
+```
+
+
+
+### 5)
+The results of the model show that the variables pclass,sex and child are significant features for the survival outcome.
+Being a child under the age of 14 years of age will increase the chances of survival by 1.19.
+Being a male will decrease the chances of survival by approx 2.5 compared to a female, therefore we can say that being a female increased the chances of survival and being in passenger class2 will decrease the survival by 0.98 whereas being in class3 will decrease survival by 1.89, hence with reference to pclass 1, class2 passengers have lower chances of survival whereas class3 passengers had more even lower/poorer chances of survival. 
+The effects/ difference in chances of survival are greater for male and pclass3.
+
+
+
+### 6)
+
+```{r}
+titanic$young_man=ifelse(titanic$age >= 18 & titanic$age <= 35 & titanic$sex=='male', 1, 0)
+
+
+model2<-glm(survived~young_man,data=titanic,family=binomial())
+summary(model2)
+```
+
+The p value for young_man(males in the age group of 18 to 35) is < 0.05 which means it is statistically significant. The result of the model shows that being male and in the age group of 18 to 35 reduces the chance of survival by 1.609 hence they survived less likely than others.
+
+
+
+### 7)
+
+Based on the results from above model being a male and in pclass3 reduced the chances of survival greatly. Being a male in the age group of 18 to 35 also lowered the odds of survival, while being a child under the age of 14 slightly had better chances(but pclass also comes into consideration here). The order on the ship did not seem to break as data showed that young men had lower chances of survival.Hence the survivors accounts are broadly accurate and the mentioned analysis of 'women and children who were 1st class and 2nd class passengers made it' is true.
+
+
+
+
+## 2)PREDICT AIRBNB PRICE
+
+### 1)
+```{r}
+maindata= read.csv("./data/airbnb-vancouver-bc-listings.csv.bz2")
+nrow(maindata)
+
+
+library(dplyr)
+airbnb=select(maindata,c('price', 'bedrooms','room_type','accommodates'))
+head(airbnb)
+
+
+#sanity check
+dim(airbnb)
+#The dataset has columns with appropriate datatypes.
+cat("\n The number of rows in data: ",nrow(airbnb))
+cat("\n The number of missing values in data:", sum(is.na(airbnb)))
+colSums(is.na(airbnb))
+cat("\n NA is in column:",sum(is.na(airbnb$bedrooms)))
+```
+ 
+
+### 2)a)
+```{r}
+
+airbnb$price= as.numeric(gsub("[$,]","",airbnb$price))
+head(airbnb)
+```
+
+
+### 2)b)
+```{r}
+airbnb=airbnb[complete.cases(airbnb),]
+head(airbnb)
+nrow(airbnb)
+```
+
+
+### 3)
+```{r}
+library(ggplot2)
+price<-ggplot(airbnb,aes(x=price))+geom_histogram(bins=30,color='black')
+price
+```
+The distribution for price does not look normal.It looks more like right skewed. 
+Log transformations are used to make highly skewed distributions less skewed, hence it reduces the skewness of the data.Hence we will need to perform log transformation here as well to reduce skewness.
+
+
+
+### 4)
+```{r}
+
+airbnb$bedroom_Category=cut(airbnb$bedrooms,breaks=c(0.0,0.9,1.9,2.9,Inf),labels=c("0","1","2","3+"))
+head(airbnb)
+
+```
+
+
+### 5)
+```{r}
+model_a=lm(log(price)~bedroom_Category,data=airbnb)
+summary(model_a)
+
+
+model_b=lm(price~bedroom_Category,data=airbnb)
+summary(model_b)
+```
+The model where we use log(price) is better than price because the R-squared of the model is 0.3085  which means 30.85% of variations in log(price) can be explained by bedroom category whereas that of other(price) is 0.08645 that means only 8.645% of data can be explained. Larger the R squared values better the explanatory variables are able to predict value of response variables.
+
+
+
+### 6)
+```{r}
+table(airbnb$room_type,airbnb$accommodates)
+```
+
+
+
+### 7)
+```{r}
+
+lookup_table=c("Entire home/apt"="Entire home/apt",
+               "Private room"="Private room",
+               "Hotel room"="Other",
+               "Shared room"="Other")
+
+airbnb$room_type=lookup_table[airbnb$room_type]
+
+airbnb$accommodates=cut(airbnb$accommodates,breaks=c(0.0,1.9,2.9,Inf),labels=c("1","2","3 or more"))
+head(airbnb)
+
+
+
+```
+
+
+### 8)
+```{r}
+
+
+model_b=lm(log(price)~bedroom_Category+room_type+accommodates,data=airbnb)
+summary(model_b)
+
+```
+The model shows that the log of price will increase by approx 0.28 if the airbnb has 2 bedrooms and by 0.768 if the airbnb falls in category of 3 or more bedrooms
+The model shows that with reference to entire home/apt airbnb with private room or other category will lower the log of price by 0.43094 and 0.13294 respectively.
+Similarly if the number of people accommodating the airbnb is 2 then log of price will increase by approx 0.32 whereas if number of people is 3 or more the log of price increases by approx 0.45.
+The reference categories are bedroom_category=1 (i.e 1 bedroom) room_type= Entire home/apt and accommodates=1 
+The R squared is 0.4318 which means that 43.18 % of variation of response variable of log(price) can be explained by the explanatory variables of room_type and accommodates.
+
+
+
+### 9)
+```{r}
+table(airbnb$room_type)
+```
+From the above model the room_type category 'Other' has p value of 0.356 which is > 0.05 hence we can say that the it is not statistically significant. Hotel room and shared room fall under other category of other. This can be due to the fact that there is less data for these categories.
+
+
+
+### 10)
+```{r}
+predict_log_price<-predict(model_b,airbnb)  # predicted log price
+head(predict_log_price)
+```
+
+
+### 11)
+```{r}
+
+
+log_prices=log(airbnb$price)  #actual log price
+head(log_prices)
+
+
+mse=mean((log_prices-predict_log_price)^2)
+mse
+
+rmse=sqrt(mse)
+rmse
+
+#using function
+library(Metrics)
+rmse(log_prices,predict_log_price)
+```
+
+
+### 12)
+```{r}
+newdata=data.frame(bedroom_Category=c(factor(2)),room_type=c('Entire home/apt'),accommodates=c('3 or more'))
+
+predict_2bed_4=predict(model_b,newdata)
+predict_2bed_4
+
+```
+
+The log price for a 2-bedroom apartment that accommodates 4 is 5.18 or approx 5.2.
+
+
+
+
+
