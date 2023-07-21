@@ -3,7 +3,7 @@
 **Titanic Survival and Airbnb Price Prediction**
 
 **Overview**
-This repository contains the code and data for a data science project that explores two different analyses. The first part of the project focuses on the Titanic disaster, aiming to examine the accuracy of survivors' accounts about the last hours of the ship. Logistic regression is used to identify factors that influenced survival, such as gender, age, and passenger class.
+The first part of the project focuses on the Titanic disaster, aiming to examine the accuracy of survivors' accounts about the last hours of the ship. Logistic regression is used to identify factors that influenced survival, such as gender, age, and passenger class.
 
 The second part of the project involves predicting Airbnb listing prices in Vancouver, BC. Data cleaning and transformation are performed, including converting price to numeric, handling missing values, and exploring price distributions. Linear regression models are built to explain the log price based on the number of bedrooms, room type, and the number of accommodates.
 
