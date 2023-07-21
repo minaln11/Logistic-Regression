@@ -1,6 +1,4 @@
-# Logistic-Regression
-
-**Titanic Survival and Airbnb Price Prediction**
+# Logistic-Regression : **Titanic Survival and Airbnb Price Prediction**
 
 **Overview**
 The first part of the project focuses on the Titanic disaster, aiming to examine the accuracy of survivors' accounts about the last hours of the ship. Logistic regression is used to identify factors that influenced survival, such as gender, age, and passenger class.
